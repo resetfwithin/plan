@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset From Within — Shopping Lists</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  html, body { 
+    background: #F2EDE3; 
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @media print {
+    @page { size: 8.5in 11in; margin: 0; }
+    html, body { background: white !important; }
+  }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    overflow: hidden;
+    page-break-after: always;
+    page-break-inside: avoid;
+    padding: 0.30in 0.34in 0.22in 0.34in;
+    position: relative;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* BACKGROUND via pseudo-element — Chrome CANNOT strip this */
+  .page::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .page > * { position: relative; z-index: 1; }
+
+  .pg1::before { background: #F2EDE3; }
+  .pg2::before { background: #D8E3D5; }
+  .pg3::before { background: #C9D9DB; }
+  .pg4::before { background: #7D2E45; }
+  .pg5::before { background: #F2EDE3; }
+
+  .hdr {
+    border-radius: 6px;
+    padding: 11px 16px 10px 16px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .hdr::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .hdr > * { position: relative; z-index: 1; }
+
+  .pg1 .hdr::before { background: #7D2E45; }
+  .pg2 .hdr::before { background: #6E8A72; }
+  .pg3 .hdr::before { background: #3D5F63; }
+  .pg4 .hdr::before { background: #5C1E33; }
+  .pg5 .hdr::before { background: #6B625B; }
+
+  .disc {
+    border-left: 3px solid;
+    border-radius: 0 3px 3px 0;
+    padding: 5px 8px;
+    margin-bottom: 12px;
+    font-size: 11pt;
+    font-style: italic;
+    font-family: Arial, sans-serif;
+    line-height: 1.45;
+    position: relative;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .disc::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .disc > span { position: relative; z-index: 1; }
+
+  .pg1 .disc { border-color: #7D2E45; color: #7D2E45; }
+  .pg1 .disc::before { background: #EAE1D5; }
+  .pg2 .disc { border-color: #4A6050; color: #344840; }
+  .pg2 .disc::before { background: #C2D4BF; }
+  .pg3 .disc { border-color: #2A4448; color: #1E3336; }
+  .pg3 .disc::before { background: #B0C8CA; }
+  .pg4 .disc { border-color: #E8D8C0; color: #E8D8C0; }
+  .pg4 .disc::before { background: #6B2540; }
+  .pg5 .disc { border-color: #BB9A5B; color: #2B2B2B; }
+  .pg5 .disc::before { background: #E0D8CC; }
+
+  .ghost {
+    position: absolute; right: 10px; bottom: -8px;
+    font-size: 66pt; font-weight: bold;
+    line-height: 1; font-family: Georgia, serif;
+    opacity: 0.15; color: #fff;
+    -webkit-print-color-adjust: exact !important;
+  }
+  .hdr-phase { font-size: 6.5pt; font-family: Arial, sans-serif; font-weight: 600; letter-spacing: 2px; color: rgba(255,255,255,0.65); margin-bottom: 3px; }
+  .hdr-week  { font-size: 25pt; font-weight: bold; color: #F2EDE3; line-height: 1.1; }
+  .hdr-sub   { font-size: 12.5pt; font-style: italic; color: #F2EDE3; opacity: 0.9; margin-top: 1px; }
+  .hdr-days  { font-size: 6.5pt; font-family: Arial, sans-serif; color: rgba(255,255,255,0.6); margin-top: 4px; }
+
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0 13px;
+    overflow: hidden;
+    flex: 1;
+  }
+  .col { overflow: hidden; }
+
+  .sec-head {
+    font-size: 13pt; font-family: Arial, sans-serif; font-weight: 700;
+    letter-spacing: 1.8px; padding-bottom: 2px; margin-bottom: 3px;
+    border-bottom: 0.6px solid;
+    margin-top: 5px;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .sec-head:first-child { margin-top: 0; }
+
+  .pg1 .sec-head { color: #5C1E33; border-color: #5C1E33; }
+  .pg2 .sec-head { color: #344840; border-color: #344840; }
+  .pg3 .sec-head { color: #1E3336; border-color: #1E3336; }
+  .pg4 .sec-head { color: #E8D8C0; border-color: rgba(232,216,192,0.5); }
+  .pg5 .sec-head { color: #BB9A5B; border-color: #BB9A5B; }
+
+  .item { display: flex; align-items: center; gap: 4px; margin-bottom: 1px; line-height: 1.25; }
+
+  .cb {
+    width: 8pt; height: 8pt; flex-shrink: 0;
+    border: 0.9pt solid; border-radius: 1pt;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .pg1 .cb { border-color: #7D2E45; background: #F2EDE3; }
+  .pg2 .cb { border-color: #4A6050; background: #D8E3D5; }
+  .pg3 .cb { border-color: #2A4448; background: #C9D9DB; }
+  .pg4 .cb { border-color: #E8D8C0; background: #7D2E45; }
+  .pg5 .cb { border-color: #BB9A5B; background: #F2EDE3; }
+
+  .iname { font-size: 12.5pt; font-family: Georgia, serif; }
+  .isep  { font-size: 7.5pt; font-family: Arial, sans-serif; opacity: 0.4; }
+  .iqty  { font-size: 11.5pt; font-family: Arial, sans-serif; font-weight: 600; }
+
+  .pg1 .iname { color: #2C1018; } .pg1 .iqty { color: #5C1E33; }
+  .pg2 .iname { color: #1A2820; } .pg2 .iqty { color: #344840; }
+  .pg3 .iname { color: #0E2224; } .pg3 .iqty { color: #1E3336; }
+  .pg4 .iname { color: #F2EDE3; } .pg4 .iqty { color: #E8D8C0; }
+  .pg5 .iname { color: #2B2B2B; } .pg5 .iqty { color: #6B625B; }
+
+
+  .pg5 .sec-head { font-size:12pt; }
+  .pg5 .iname { font-size:11.5pt; }
+  .pg5 .iqty { font-size:10.5pt; }
+
+  .footer {
+    margin-top: 6px; padding-top: 5px;
+    border-top: 0.5px solid;
+    display: flex; justify-content: space-between;
+    font-family: Arial, sans-serif; font-size: 6pt;
+    -webkit-print-color-adjust: exact !important;
+  }
+  .pg1 .footer { border-color: #7D2E45; color: #7D2E45; }
+  .pg2 .footer { border-color: #4A6050; color: #4A6050; }
+  .pg3 .footer { border-color: #2A4448; color: #2A4448; }
+  .pg4 .footer { border-color: #E8D8C0; color: #E8D8C0; }
+  .pg5 .footer { border-color: #BB9A5B; color: #6B625B; }
+
+  /* Interactive checkbox — screen only */
+  @media screen {
+    .cb {
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .cb.checked::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -55%) rotate(45deg);
+      width: 3pt; height: 5pt;
+      border-right: 1.5pt solid;
+      border-bottom: 1.5pt solid;
+    }
+    .pg1 .cb.checked::after { border-color: #7D2E45; }
+    .pg2 .cb.checked::after { border-color: #4A6050; }
+    .pg3 .cb.checked::after { border-color: #2A4448; }
+    .pg4 .cb.checked::after { border-color: #E8D8C0; }
+    .pg5 .cb.checked::after { border-color: #BB9A5B; }
+
+    .item.checked .iname,
+    .item.checked .iqty {
+      opacity: 0.4;
+      text-decoration: line-through;
+      text-decoration-color: currentColor;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="page pg1">
+  <div class="hdr">
+    <div class="ghost">01</div>
+    <div class="hdr-phase">PHASE 01  ·  RESET</div>
+    <div class="hdr-week">WEEK ONE</div>
+    <div class="hdr-sub">Shopping List</div>
+    <div class="hdr-days">Days 1–7</div>
+  </div>
+  <div class="disc"><span>The quantities below reflect estimated requirements for one person following the program. Actual amounts may vary depending on individual portion sizes and personal nutritional needs.</span></div>
+  <div class="cols">
+    <div class="col"><div class="sec-head">VEGETABLES</div><div class="item"><div class="cb"></div><span class="iname">Broccoli</span><span class="isep"> · </span><span class="iqty">450 g</span></div><div class="item"><div class="cb"></div><span class="iname">Zucchini</span><span class="isep"> · </span><span class="iqty">4</span></div><div class="item"><div class="cb"></div><span class="iname">Carrots</span><span class="isep"> · </span><span class="iqty">5</span></div><div class="item"><div class="cb"></div><span class="iname">Cucumber</span><span class="isep"> · </span><span class="iqty">10</span></div><div class="item"><div class="cb"></div><span class="iname">Celery stalks</span><span class="isep"> · </span><span class="iqty">11</span></div><div class="item"><div class="cb"></div><span class="iname">Green beans</span><span class="isep"> · </span><span class="iqty">200 g</span></div><div class="item"><div class="cb"></div><span class="iname">Garlic cloves</span><span class="isep"> · </span><span class="iqty">11</span></div><div class="item"><div class="cb"></div><span class="iname">Artichoke hearts</span><span class="isep"> · </span><span class="iqty">4</span></div><div class="item"><div class="cb"></div><span class="iname">Avocados</span><span class="isep"> · </span><span class="iqty">5</span></div><div class="item"><div class="cb"></div><span class="iname">Cherry tomatoes</span><span class="isep"> · </span><span class="iqty">8</span></div><div class="sec-head">LEAFY GREENS</div><div class="item"><div class="cb"></div><span class="iname">Baby spinach</span><span class="isep"> · </span><span class="iqty">31 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Arugula</span><span class="isep"> · </span><span class="iqty">4 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Baby arugula</span><span class="isep"> · </span><span class="iqty">4 handfuls</span></div><div class="sec-head">SPROUTS</div><div class="item"><div class="cb"></div><span class="iname">Broccoli sprouts</span><span class="isep"> · </span><span class="iqty">7 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Sunflower sprouts</span><span class="isep"> · </span><span class="iqty">5 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Pea sprouts</span><span class="isep"> · </span><span class="iqty">4 handfuls</span></div><div class="sec-head">FRUITS & CITRUS</div><div class="item"><div class="cb"></div><span class="iname">Lemons</span><span class="isep"> · </span><span class="iqty">12.5</span></div><div class="item"><div class="cb"></div><span class="iname">Limes</span><span class="isep"> · </span><span class="iqty">7.5</span></div><div class="item"><div class="cb"></div><span class="iname">Green apple</span><span class="isep"> · </span><span class="iqty">0.5</span></div><div class="item"><div class="cb"></div><span class="iname">Grapefruit</span><span class="isep"> · </span><span class="iqty">0.5</span></div></div>
+    <div class="col"><div class="sec-head">BERRIES</div><div class="item"><div class="cb"></div><span class="iname">Blueberries</span><span class="isep"> · </span><span class="iqty">1¾ cups · 260 g</span></div><div class="item"><div class="cb"></div><span class="iname">Raspberries</span><span class="isep"> · </span><span class="iqty">1¼ cups · 150 g</span></div><div class="item"><div class="cb"></div><span class="iname">Blackberries</span><span class="isep"> · </span><span class="iqty">½ cup · 75 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cranberries</span><span class="isep"> · </span><span class="iqty">3 tbsp · 30 g dried</span></div><div class="item"><div class="cb"></div><span class="iname">Pomegranate seeds</span><span class="isep"> · </span><span class="iqty">10 tbsp · 150 g</span></div><div class="sec-head">SEEDS</div><div class="item"><div class="cb"></div><span class="iname">Hemp seeds</span><span class="isep"> · </span><span class="iqty">21 tbsp · 210 g</span></div><div class="item"><div class="cb"></div><span class="iname">Pumpkin seeds</span><span class="isep"> · </span><span class="iqty">7 tbsp · 70 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sunflower seeds</span><span class="isep"> · </span><span class="iqty">5 tbsp · 50 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sesame seeds</span><span class="isep"> · </span><span class="iqty">4 tsp · 12 g</span></div><div class="item"><div class="cb"></div><span class="iname">Chia seeds</span><span class="isep"> · </span><span class="iqty">6 tbsp + 1 tsp · 78 g</span></div><div class="item"><div class="cb"></div><span class="iname">Ground flaxseeds</span><span class="isep"> · </span><span class="iqty">6 tbsp · 42 g</span></div><div class="item"><div class="cb"></div><span class="iname">Flaxseeds</span><span class="isep"> · </span><span class="iqty">1 tbsp + 1 tsp · 13 g</span></div><div class="sec-head">FRESH HERBS</div><div class="item"><div class="cb"></div><span class="iname">Fresh parsley</span><span class="isep"> · </span><span class="iqty">7 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh cilantro</span><span class="isep"> · </span><span class="iqty">9 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh mint</span><span class="isep"> · </span><span class="iqty">4 handfuls + 3 small servings</span></div><div class="sec-head">LIQUIDS</div><div class="item"><div class="cb"></div><span class="iname">Coconut water</span><span class="isep"> · </span><span class="iqty">1.4L</span></div><div class="item"><div class="cb"></div><span class="iname">Vegetable broth</span><span class="isep"> · </span><span class="iqty">2.5L</span></div><div class="item"><div class="cb"></div><span class="iname">Water (recipes)</span><span class="isep"> · </span><span class="iqty">1.6L</span></div><div class="sec-head">OILS</div><div class="item"><div class="cb"></div><span class="iname">Olive oil</span><span class="isep"> · </span><span class="iqty">5 tsp · 25 ml</span></div></div>
+    <div class="col"><div class="sec-head">GINGER</div><div class="item"><div class="cb"></div><span class="iname">Morning ginger</span><span class="isep"> · </span><span class="iqty">7 tsp</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh ginger (recipes)</span><span class="isep"> · </span><span class="iqty">4.5 cm</span></div><div class="sec-head">SPICES</div><div class="item"><div class="cb"></div><span class="iname">Cinnamon</span><span class="isep"> · </span><span class="iqty">3 pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cayenne pepper</span><span class="isep"> · </span><span class="iqty">2 pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Turmeric</span><span class="isep"> · </span><span class="iqty">1 pinch</span></div><div class="item"><div class="cb"></div><span class="iname">Himalayan salt</span><span class="isep"> · </span><span class="iqty">to taste</span></div><div class="sec-head">OTHER</div><div class="item"><div class="cb"></div><span class="iname">Wheatgrass</span><span class="isep"> · </span><span class="iqty">3 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Apple cider vinegar</span><span class="isep"> · </span><span class="iqty">3 tsp · 15 ml</span></div><div class="sec-head">TEAS</div><div class="item"><div class="cb"></div><span class="iname">Peppermint tea</span><span class="isep"> · </span><span class="iqty">3 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Chamomile tea</span><span class="isep"> · </span><span class="iqty">4 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Dandelion Root tea</span><span class="isep"> · </span><span class="iqty">3 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Ginger tea</span><span class="isep"> · </span><span class="iqty">2 servings</span></div></div>
+  </div>
+  <div class="footer">
+    <span>Reset From Within · 28-Day Plant-Based Program</span>
+    <span style="font-weight:600;">1 of 5</span>
+  </div>
+</div>
+<div class="page pg2">
+  <div class="hdr">
+    <div class="ghost">02</div>
+    <div class="hdr-phase">PHASE 02  ·  PURIFY</div>
+    <div class="hdr-week">WEEK TWO</div>
+    <div class="hdr-sub">Shopping List</div>
+    <div class="hdr-days">Days 8–14</div>
+  </div>
+  <div class="disc"><span>The quantities below reflect estimated requirements for one person following the program. Actual amounts may vary depending on individual portion sizes and personal nutritional needs.</span></div>
+  <div class="cols">
+    <div class="col"><div class="sec-head">VEGETABLES</div><div class="item"><div class="cb"></div><span class="iname">Asparagus</span><span class="isep"> · </span><span class="iqty">200 g</span></div><div class="item"><div class="cb"></div><span class="iname">Beetroot</span><span class="isep"> · </span><span class="iqty">2</span></div><div class="item"><div class="cb"></div><span class="iname">Celery stalks</span><span class="isep"> · </span><span class="iqty">5</span></div><div class="item"><div class="cb"></div><span class="iname">Pak choi</span><span class="isep"> · </span><span class="iqty">2 leaves + 2 large heads</span></div><div class="item"><div class="cb"></div><span class="iname">Daikon radish</span><span class="isep"> · </span><span class="iqty">200 g + few slices</span></div><div class="item"><div class="cb"></div><span class="iname">Cauliflower</span><span class="isep"> · </span><span class="iqty">400 g</span></div><div class="item"><div class="cb"></div><span class="iname">Broccoli</span><span class="isep"> · </span><span class="iqty">300 g</span></div><div class="item"><div class="cb"></div><span class="iname">Green beans</span><span class="isep"> · </span><span class="iqty">200 g</span></div><div class="item"><div class="cb"></div><span class="iname">Zucchini</span><span class="isep"> · </span><span class="iqty">2</span></div><div class="item"><div class="cb"></div><span class="iname">Leeks</span><span class="isep"> · </span><span class="iqty">4.5</span></div><div class="item"><div class="cb"></div><span class="iname">Onion</span><span class="isep"> · </span><span class="iqty">1</span></div><div class="item"><div class="cb"></div><span class="iname">Red onion</span><span class="isep"> · </span><span class="iqty">1</span></div><div class="item"><div class="cb"></div><span class="iname">Red bell peppers</span><span class="isep"> · </span><span class="iqty">6</span></div><div class="item"><div class="cb"></div><span class="iname">Cherry tomatoes</span><span class="isep"> · </span><span class="iqty">350 g</span></div><div class="item"><div class="cb"></div><span class="iname">Garlic cloves</span><span class="isep"> · </span><span class="iqty">43+</span></div><div class="item"><div class="cb"></div><span class="iname">Artichoke hearts</span><span class="isep"> · </span><span class="iqty">9</span></div><div class="item"><div class="cb"></div><span class="iname">Avocado</span><span class="isep"> · </span><span class="iqty">0.5</span></div><div class="item"><div class="cb"></div><span class="iname">Spring onions</span><span class="isep"> · </span><span class="iqty">6</span></div><div class="item"><div class="cb"></div><span class="iname">Butternut squash</span><span class="isep"> · </span><span class="iqty">300 g</span></div><div class="sec-head">LEAFY GREENS</div><div class="item"><div class="cb"></div><span class="iname">Baby spinach</span><span class="isep"> · </span><span class="iqty">13 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Baby arugula</span><span class="isep"> · </span><span class="iqty">6 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Arugula</span><span class="isep"> · </span><span class="iqty">2 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Spinach</span><span class="isep"> · </span><span class="iqty">2 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Swiss chard</span><span class="isep"> · </span><span class="iqty">1 large + 1 handful</span></div><div class="sec-head">SPROUTS</div><div class="item"><div class="cb"></div><span class="iname">Broccoli sprouts</span><span class="isep"> · </span><span class="iqty">3 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Sunflower sprouts</span><span class="isep"> · </span><span class="iqty">2 handfuls</span></div><div class="sec-head">FRUITS & CITRUS</div><div class="item"><div class="cb"></div><span class="iname">Lemons</span><span class="isep"> · </span><span class="iqty">7.5</span></div><div class="item"><div class="cb"></div><span class="iname">Limes</span><span class="isep"> · </span><span class="iqty">1</span></div></div>
+    <div class="col"><div class="sec-head">BERRIES</div><div class="item"><div class="cb"></div><span class="iname">Blueberries</span><span class="isep"> · </span><span class="iqty">3 cups · 450 g</span></div><div class="item"><div class="cb"></div><span class="iname">Raspberries</span><span class="isep"> · </span><span class="iqty">1 cup · 120 g</span></div><div class="item"><div class="cb"></div><span class="iname">Blackberries</span><span class="isep"> · </span><span class="iqty">1 cup · 145 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cranberries</span><span class="isep"> · </span><span class="iqty">½ cup · 50 g dried</span></div><div class="item"><div class="cb"></div><span class="iname">Pomegranate seeds</span><span class="isep"> · </span><span class="iqty">4 tbsp · 60 g</span></div><div class="sec-head">SEEDS</div><div class="item"><div class="cb"></div><span class="iname">Hemp seeds</span><span class="isep"> · </span><span class="iqty">27 tbsp · 270 g</span></div><div class="item"><div class="cb"></div><span class="iname">Pumpkin seeds</span><span class="isep"> · </span><span class="iqty">6 tbsp + 1 handful</span></div><div class="item"><div class="cb"></div><span class="iname">Sunflower seeds</span><span class="isep"> · </span><span class="iqty">4 tbsp + 1 handful</span></div><div class="item"><div class="cb"></div><span class="iname">Sesame seeds</span><span class="isep"> · </span><span class="iqty">5 tsp · 15 g</span></div><div class="item"><div class="cb"></div><span class="iname">Ground flaxseeds</span><span class="isep"> · </span><span class="iqty">7 tbsp · 49 g</span></div><div class="item"><div class="cb"></div><span class="iname">Chia seeds</span><span class="isep"> · </span><span class="iqty">2 tbsp · 24 g</span></div><div class="sec-head">FERMENTED FOODS</div><div class="item"><div class="cb"></div><span class="iname">Miso paste</span><span class="isep"> · </span><span class="iqty">2.5 tbsp · 45 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sauerkraut</span><span class="isep"> · </span><span class="iqty">12 tbsp · 180 g</span></div><div class="item"><div class="cb"></div><span class="iname">Kimchi</span><span class="isep"> · </span><span class="iqty">14 tbsp · 210 g</span></div><div class="item"><div class="cb"></div><span class="iname">Tamari</span><span class="isep"> · </span><span class="iqty">1 tbsp + 2 tsp · 25 ml</span></div><div class="sec-head">COCONUT</div><div class="item"><div class="cb"></div><span class="iname">Coconut milk</span><span class="isep"> · </span><span class="iqty">350 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut cream</span><span class="isep"> · </span><span class="iqty">810 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut water</span><span class="isep"> · </span><span class="iqty">750 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut flakes</span><span class="isep"> · </span><span class="iqty">2 tsp</span></div><div class="sec-head">LIQUIDS & OILS</div><div class="item"><div class="cb"></div><span class="iname">Vegetable broth</span><span class="isep"> · </span><span class="iqty">3.4L</span></div><div class="item"><div class="cb"></div><span class="iname">Water (recipes)</span><span class="isep"> · </span><span class="iqty">650 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut oil</span><span class="isep"> · </span><span class="iqty">10 tsp · 50 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Sesame oil</span><span class="isep"> · </span><span class="iqty">1.5 tsp · 7.5 ml</span></div></div>
+    <div class="col"><div class="sec-head">FRESH HERBS</div><div class="item"><div class="cb"></div><span class="iname">Fresh cilantro</span><span class="isep"> · </span><span class="iqty">7 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh parsley</span><span class="isep"> · </span><span class="iqty">3 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh basil</span><span class="isep"> · </span><span class="iqty">2 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh mint</span><span class="isep"> · </span><span class="iqty">few leaves</span></div><div class="sec-head">GINGER & SPICES</div><div class="item"><div class="cb"></div><span class="iname">Morning ginger</span><span class="isep"> · </span><span class="iqty">7 tsp</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh ginger</span><span class="isep"> · </span><span class="iqty">6.5 cm + grated</span></div><div class="item"><div class="cb"></div><span class="iname">Ground ginger</span><span class="isep"> · </span><span class="iqty">0.5 tsp</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh turmeric</span><span class="isep"> · </span><span class="iqty">1 cm</span></div><div class="item"><div class="cb"></div><span class="iname">Turmeric</span><span class="isep"> · </span><span class="iqty">10 tsp · 30 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cinnamon</span><span class="isep"> · </span><span class="iqty">3 tsp · 8 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cardamom</span><span class="isep"> · </span><span class="iqty">1.5 tsp · 3 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cumin</span><span class="isep"> · </span><span class="iqty">2.5 tsp · 5 g</span></div><div class="item"><div class="cb"></div><span class="iname">Black pepper</span><span class="isep"> · </span><span class="iqty">2.5 tsp · 6 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cayenne</span><span class="isep"> · </span><span class="iqty">3 pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Himalayan salt</span><span class="isep"> · </span><span class="iqty">to taste</span></div><div class="sec-head">OTHER & TEAS</div><div class="item"><div class="cb"></div><span class="iname">Apple cider vinegar</span><span class="isep"> · </span><span class="iqty">7 tsp · 35 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Tahini</span><span class="isep"> · </span><span class="iqty">1.5 tbsp · 22.5 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Peppermint tea</span><span class="isep"> · </span><span class="iqty">4 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Dandelion Root tea</span><span class="isep"> · </span><span class="iqty">3 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Ginger tea</span><span class="isep"> · </span><span class="iqty">4 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Chamomile tea</span><span class="isep"> · </span><span class="iqty">2 servings</span></div></div>
+  </div>
+  <div class="footer">
+    <span>Reset From Within · 28-Day Plant-Based Program</span>
+    <span style="font-weight:600;">2 of 5</span>
+  </div>
+</div>
+<div class="page pg3">
+  <div class="hdr">
+    <div class="ghost">03</div>
+    <div class="hdr-phase">PHASE 03  ·  REBUILD</div>
+    <div class="hdr-week">WEEK THREE</div>
+    <div class="hdr-sub">Shopping List</div>
+    <div class="hdr-days">Days 15–21</div>
+  </div>
+  <div class="disc"><span>The quantities below reflect estimated requirements for one person following the program. Actual amounts may vary depending on individual portion sizes and personal nutritional needs.</span></div>
+  <div class="cols">
+    <div class="col"><div class="sec-head">GRAINS</div><div class="item"><div class="cb"></div><span class="iname">Buckwheat</span><span class="isep"> · </span><span class="iqty">230 g</span></div><div class="item"><div class="cb"></div><span class="iname">Quinoa</span><span class="isep"> · </span><span class="iqty">230 g</span></div><div class="sec-head">LEGUMES</div><div class="item"><div class="cb"></div><span class="iname">Red lentils</span><span class="isep"> · </span><span class="iqty">200 g</span></div><div class="item"><div class="cb"></div><span class="iname">Chickpeas</span><span class="isep"> · </span><span class="iqty">250 g</span></div><div class="item"><div class="cb"></div><span class="iname">Green peas</span><span class="isep"> · </span><span class="iqty">½ cup</span></div><div class="sec-head">VEGETABLES</div><div class="item"><div class="cb"></div><span class="iname">Zucchini</span><span class="isep"> · </span><span class="iqty">2</span></div><div class="item"><div class="cb"></div><span class="iname">Red bell peppers</span><span class="isep"> · </span><span class="iqty">3</span></div><div class="item"><div class="cb"></div><span class="iname">Yellow bell pepper</span><span class="isep"> · </span><span class="iqty">1</span></div><div class="item"><div class="cb"></div><span class="iname">Pumpkin</span><span class="isep"> · </span><span class="iqty">250 g</span></div><div class="item"><div class="cb"></div><span class="iname">Red onions</span><span class="isep"> · </span><span class="iqty">5</span></div><div class="item"><div class="cb"></div><span class="iname">Onion</span><span class="isep"> · </span><span class="iqty">1</span></div><div class="item"><div class="cb"></div><span class="iname">Leeks</span><span class="isep"> · </span><span class="iqty">4.5</span></div><div class="item"><div class="cb"></div><span class="iname">Garlic cloves</span><span class="isep"> · </span><span class="iqty">38</span></div><div class="item"><div class="cb"></div><span class="iname">Carrots</span><span class="isep"> · </span><span class="iqty">3</span></div><div class="item"><div class="cb"></div><span class="iname">Beetroot</span><span class="isep"> · </span><span class="iqty">1</span></div><div class="item"><div class="cb"></div><span class="iname">Cucumber</span><span class="isep"> · </span><span class="iqty">1</span></div><div class="item"><div class="cb"></div><span class="iname">Celery stalks</span><span class="isep"> · </span><span class="iqty">2</span></div><div class="item"><div class="cb"></div><span class="iname">Broccoli</span><span class="isep"> · </span><span class="iqty">250 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cauliflower</span><span class="isep"> · </span><span class="iqty">200 g</span></div><div class="item"><div class="cb"></div><span class="iname">Green beans</span><span class="isep"> · </span><span class="iqty">150 g</span></div><div class="item"><div class="cb"></div><span class="iname">Purple cabbage</span><span class="isep"> · </span><span class="iqty">1 cup</span></div><div class="item"><div class="cb"></div><span class="iname">Artichoke hearts</span><span class="isep"> · </span><span class="iqty">7</span></div><div class="item"><div class="cb"></div><span class="iname">Avocados</span><span class="isep"> · </span><span class="iqty">2</span></div><div class="sec-head">LEAFY GREENS</div><div class="item"><div class="cb"></div><span class="iname">Baby spinach</span><span class="isep"> · </span><span class="iqty">18 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Baby arugula</span><span class="isep"> · </span><span class="iqty">4 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Arugula</span><span class="isep"> · </span><span class="iqty">1 handful</span></div><div class="item"><div class="cb"></div><span class="iname">Swiss chard</span><span class="isep"> · </span><span class="iqty">1 large handful</span></div></div>
+    <div class="col"><div class="sec-head">FRUITS & CITRUS</div><div class="item"><div class="cb"></div><span class="iname">Lemons</span><span class="isep"> · </span><span class="iqty">8.5</span></div><div class="item"><div class="cb"></div><span class="iname">Limes</span><span class="isep"> · </span><span class="iqty">2</span></div><div class="sec-head">BERRIES</div><div class="item"><div class="cb"></div><span class="iname">Blueberries</span><span class="isep"> · </span><span class="iqty">4¼ cups · 635 g</span></div><div class="item"><div class="cb"></div><span class="iname">Raspberries</span><span class="isep"> · </span><span class="iqty">½ cup · 60 g</span></div><div class="item"><div class="cb"></div><span class="iname">Blackberries</span><span class="isep"> · </span><span class="iqty">1 cup · 145 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cranberries</span><span class="isep"> · </span><span class="iqty">¼ cup · 25 g dried</span></div><div class="item"><div class="cb"></div><span class="iname">Pomegranate seeds</span><span class="isep"> · </span><span class="iqty">4 tbsp · 60 g</span></div><div class="sec-head">SEEDS</div><div class="item"><div class="cb"></div><span class="iname">Hemp seeds</span><span class="isep"> · </span><span class="iqty">23 tbsp · 230 g</span></div><div class="item"><div class="cb"></div><span class="iname">Pumpkin seeds</span><span class="isep"> · </span><span class="iqty">6 tbsp · 60 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sunflower seeds</span><span class="isep"> · </span><span class="iqty">4 tbsp · 40 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sesame seeds</span><span class="isep"> · </span><span class="iqty">2 tsp · 6 g</span></div><div class="item"><div class="cb"></div><span class="iname">Ground flaxseeds</span><span class="isep"> · </span><span class="iqty">8 tbsp · 56 g</span></div><div class="item"><div class="cb"></div><span class="iname">Chia seeds</span><span class="isep"> · </span><span class="iqty">1 tbsp · 12 g</span></div><div class="sec-head">FERMENTED FOODS</div><div class="item"><div class="cb"></div><span class="iname">Sauerkraut</span><span class="isep"> · </span><span class="iqty">14 tbsp · 210 g</span></div><div class="item"><div class="cb"></div><span class="iname">Kimchi</span><span class="isep"> · </span><span class="iqty">12 tbsp · 180 g</span></div><div class="sec-head">COCONUT</div><div class="item"><div class="cb"></div><span class="iname">Coconut milk</span><span class="isep"> · </span><span class="iqty">780 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut cream</span><span class="isep"> · </span><span class="iqty">600 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut water</span><span class="isep"> · </span><span class="iqty">700 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut flakes</span><span class="isep"> · </span><span class="iqty">1 tsp</span></div><div class="sec-head">LIQUIDS & OILS</div><div class="item"><div class="cb"></div><span class="iname">Vegetable broth</span><span class="isep"> · </span><span class="iqty">3.05L</span></div><div class="item"><div class="cb"></div><span class="iname">Water (recipes)</span><span class="isep"> · </span><span class="iqty">700 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut oil</span><span class="isep"> · </span><span class="iqty">9.5 tsp · 47.5 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Olive oil</span><span class="isep"> · </span><span class="iqty">1 tsp · 5 ml</span></div></div>
+    <div class="col"><div class="sec-head">FRESH HERBS</div><div class="item"><div class="cb"></div><span class="iname">Fresh cilantro</span><span class="isep"> · </span><span class="iqty">9 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh parsley</span><span class="isep"> · </span><span class="iqty">2 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh mint</span><span class="isep"> · </span><span class="iqty">1 handful + few-leaf servings</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh dill</span><span class="isep"> · </span><span class="iqty">1 handful</span></div><div class="sec-head">GINGER & SPICES</div><div class="item"><div class="cb"></div><span class="iname">Morning ginger</span><span class="isep"> · </span><span class="iqty">7 tsp</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh ginger</span><span class="isep"> · </span><span class="iqty">5 cm + grated</span></div><div class="item"><div class="cb"></div><span class="iname">Turmeric</span><span class="isep"> · </span><span class="iqty">9.5 tsp · 28 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cinnamon</span><span class="isep"> · </span><span class="iqty">5 tsp · 13 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cardamom</span><span class="isep"> · </span><span class="iqty">1.5 tsp · 3 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cumin</span><span class="isep"> · </span><span class="iqty">4 tsp · 8 g</span></div><div class="item"><div class="cb"></div><span class="iname">Ground coriander</span><span class="isep"> · </span><span class="iqty">1.5 tsp · 3 g</span></div><div class="item"><div class="cb"></div><span class="iname">Black pepper</span><span class="isep"> · </span><span class="iqty">1.75 tsp · 4 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Vanilla</span><span class="isep"> · </span><span class="iqty">1 pinch</span></div><div class="item"><div class="cb"></div><span class="iname">Cayenne</span><span class="isep"> · </span><span class="iqty">1 pinch</span></div><div class="item"><div class="cb"></div><span class="iname">Himalayan salt</span><span class="isep"> · </span><span class="iqty">to taste</span></div><div class="sec-head">OTHER & TEAS</div><div class="item"><div class="cb"></div><span class="iname">Apple cider vinegar</span><span class="isep"> · </span><span class="iqty">7 tsp · 35 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Tahini</span><span class="isep"> · </span><span class="iqty">6 tbsp · 90 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Spirulina</span><span class="isep"> · </span><span class="iqty">1.5 tsp · 4.5 g</span></div><div class="item"><div class="cb"></div><span class="iname">Peppermint tea</span><span class="isep"> · </span><span class="iqty">4 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Dandelion Root tea</span><span class="isep"> · </span><span class="iqty">3 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Ginger tea</span><span class="isep"> · </span><span class="iqty">3 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Chamomile tea</span><span class="isep"> · </span><span class="iqty">4 servings</span></div></div>
+  </div>
+  <div class="footer">
+    <span>Reset From Within · 28-Day Plant-Based Program</span>
+    <span style="font-weight:600;">3 of 5</span>
+  </div>
+</div>
+<div class="page pg4">
+  <div class="hdr">
+    <div class="ghost">04</div>
+    <div class="hdr-phase">PHASE 04  ·  THRIVE</div>
+    <div class="hdr-week">WEEK FOUR</div>
+    <div class="hdr-sub">Shopping List</div>
+    <div class="hdr-days">Days 22–28</div>
+  </div>
+  <div class="disc"><span>The quantities below reflect estimated requirements for one person following the program. Actual amounts may vary depending on individual portion sizes and personal nutritional needs.</span></div>
+  <div class="cols">
+    <div class="col"><div class="sec-head">GRAINS</div><div class="item"><div class="cb"></div><span class="iname">Buckwheat</span><span class="isep"> · </span><span class="iqty">250 g</span></div><div class="item"><div class="cb"></div><span class="iname">Quinoa</span><span class="isep"> · </span><span class="iqty">330 g</span></div><div class="sec-head">LEGUMES</div><div class="item"><div class="cb"></div><span class="iname">Red lentils</span><span class="isep"> · </span><span class="iqty">230 g</span></div><div class="item"><div class="cb"></div><span class="iname">Chickpeas</span><span class="isep"> · </span><span class="iqty">280 g</span></div><div class="item"><div class="cb"></div><span class="iname">Green peas</span><span class="isep"> · </span><span class="iqty">1 cup</span></div><div class="sec-head">NUTS</div><div class="item"><div class="cb"></div><span class="iname">Walnuts</span><span class="isep"> · </span><span class="iqty">11 tbsp · 77 g</span></div><div class="item"><div class="cb"></div><span class="iname">Almonds</span><span class="isep"> · </span><span class="iqty">7 tbsp · 63 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cashews</span><span class="isep"> · </span><span class="iqty">5 tbsp · 45 g</span></div><div class="sec-head">VEGETABLES</div><div class="item"><div class="cb"></div><span class="iname">Sweet potato</span><span class="isep"> · </span><span class="iqty">750 g</span></div><div class="item"><div class="cb"></div><span class="iname">Butternut squash</span><span class="isep"> · </span><span class="iqty">500 g</span></div><div class="item"><div class="cb"></div><span class="iname">Broccoli</span><span class="isep"> · </span><span class="iqty">600 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cauliflower</span><span class="isep"> · </span><span class="iqty">300 g</span></div><div class="item"><div class="cb"></div><span class="iname">Asparagus</span><span class="isep"> · </span><span class="iqty">200 g</span></div><div class="item"><div class="cb"></div><span class="iname">Pak choi</span><span class="isep"> · </span><span class="iqty">3 large heads</span></div><div class="item"><div class="cb"></div><span class="iname">Purple cabbage</span><span class="isep"> · </span><span class="iqty">3 cups</span></div><div class="item"><div class="cb"></div><span class="iname">Carrots</span><span class="isep"> · </span><span class="iqty">3</span></div><div class="item"><div class="cb"></div><span class="iname">Red bell peppers</span><span class="isep"> · </span><span class="iqty">2</span></div><div class="item"><div class="cb"></div><span class="iname">Red onions</span><span class="isep"> · </span><span class="iqty">3.5</span></div><div class="item"><div class="cb"></div><span class="iname">Garlic cloves</span><span class="isep"> · </span><span class="iqty">37</span></div><div class="item"><div class="cb"></div><span class="iname">Spring onions</span><span class="isep"> · </span><span class="iqty">4</span></div><div class="item"><div class="cb"></div><span class="iname">Leek</span><span class="isep"> · </span><span class="iqty">0.5</span></div><div class="item"><div class="cb"></div><span class="iname">Avocados</span><span class="isep"> · </span><span class="iqty">4.5</span></div><div class="sec-head">LEAFY GREENS</div><div class="item"><div class="cb"></div><span class="iname">Baby spinach</span><span class="isep"> · </span><span class="iqty">16 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Baby arugula</span><span class="isep"> · </span><span class="iqty">6 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Arugula</span><span class="isep"> · </span><span class="iqty">1 handful</span></div><div class="item"><div class="cb"></div><span class="iname">Swiss chard</span><span class="isep"> · </span><span class="iqty">1 handful</span></div></div>
+    <div class="col"><div class="sec-head">FRUITS & CITRUS</div><div class="item"><div class="cb"></div><span class="iname">Lemons</span><span class="isep"> · </span><span class="iqty">7</span></div><div class="item"><div class="cb"></div><span class="iname">Limes</span><span class="isep"> · </span><span class="iqty">1</span></div><div class="sec-head">BERRIES</div><div class="item"><div class="cb"></div><span class="iname">Blueberries</span><span class="isep"> · </span><span class="iqty">4½ cups · 675 g</span></div><div class="item"><div class="cb"></div><span class="iname">Raspberries</span><span class="isep"> · </span><span class="iqty">1¼ cups · 150 g</span></div><div class="item"><div class="cb"></div><span class="iname">Blackberries</span><span class="isep"> · </span><span class="iqty">1 cup · 145 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cranberries</span><span class="isep"> · </span><span class="iqty">½ cup · 50 g dried</span></div><div class="item"><div class="cb"></div><span class="iname">Pomegranate seeds</span><span class="isep"> · </span><span class="iqty">4 tbsp · 60 g</span></div><div class="sec-head">SEEDS</div><div class="item"><div class="cb"></div><span class="iname">Hemp seeds</span><span class="isep"> · </span><span class="iqty">21 tbsp · 210 g</span></div><div class="item"><div class="cb"></div><span class="iname">Pumpkin seeds</span><span class="isep"> · </span><span class="iqty">5 tbsp · 50 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sunflower seeds</span><span class="isep"> · </span><span class="iqty">1 tbsp · 10 g</span></div><div class="item"><div class="cb"></div><span class="iname">Ground flaxseeds</span><span class="isep"> · </span><span class="iqty">9 tbsp · 63 g</span></div><div class="item"><div class="cb"></div><span class="iname">Chia seeds</span><span class="isep"> · </span><span class="iqty">1 tbsp · 12 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sesame seeds</span><span class="isep"> · </span><span class="iqty">3 tsp · 9 g</span></div><div class="sec-head">FERMENTED FOODS</div><div class="item"><div class="cb"></div><span class="iname">Kimchi</span><span class="isep"> · </span><span class="iqty">18 tbsp · 270 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sauerkraut</span><span class="isep"> · </span><span class="iqty">20 tbsp · 300 g</span></div><div class="sec-head">COCONUT</div><div class="item"><div class="cb"></div><span class="iname">Coconut milk</span><span class="isep"> · </span><span class="iqty">1.75L</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut cream</span><span class="isep"> · </span><span class="iqty">700 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut flakes</span><span class="isep"> · </span><span class="iqty">2 tsp · 4 g</span></div><div class="sec-head">LIQUIDS & OILS</div><div class="item"><div class="cb"></div><span class="iname">Vegetable broth</span><span class="isep"> · </span><span class="iqty">2.45L</span></div><div class="item"><div class="cb"></div><span class="iname">Water (recipes)</span><span class="isep"> · </span><span class="iqty">300 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut oil</span><span class="isep"> · </span><span class="iqty">8.5 tsp · 42.5 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Sesame oil</span><span class="isep"> · </span><span class="iqty">1 tsp · 5 ml</span></div></div>
+    <div class="col"><div class="sec-head">FRESH HERBS</div><div class="item"><div class="cb"></div><span class="iname">Fresh cilantro</span><span class="isep"> · </span><span class="iqty">11 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh parsley</span><span class="isep"> · </span><span class="iqty">5 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh mint</span><span class="isep"> · </span><span class="iqty">1 handful + few leaves</span></div><div class="sec-head">GINGER & SPICES</div><div class="item"><div class="cb"></div><span class="iname">Morning ginger</span><span class="isep"> · </span><span class="iqty">7 tsp</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh ginger</span><span class="isep"> · </span><span class="iqty">11 cm</span></div><div class="item"><div class="cb"></div><span class="iname">Turmeric</span><span class="isep"> · </span><span class="iqty">9.5 tsp · 28 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cinnamon</span><span class="isep"> · </span><span class="iqty">6 tsp · 16 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cardamom</span><span class="isep"> · </span><span class="iqty">1.75 tsp · 3.5 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Black pepper</span><span class="isep"> · </span><span class="iqty">1.25 tsp · 3 g + pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Cumin</span><span class="isep"> · </span><span class="iqty">2 tsp · 4 g</span></div><div class="item"><div class="cb"></div><span class="iname">Ground coriander</span><span class="isep"> · </span><span class="iqty">1 tsp · 2 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cayenne</span><span class="isep"> · </span><span class="iqty">2 pinches</span></div><div class="item"><div class="cb"></div><span class="iname">Himalayan salt</span><span class="isep"> · </span><span class="iqty">to taste</span></div><div class="sec-head">OTHER & TEAS</div><div class="item"><div class="cb"></div><span class="iname">Apple cider vinegar</span><span class="isep"> · </span><span class="iqty">7 tsp · 35 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Tahini</span><span class="isep"> · </span><span class="iqty">7 tbsp · 105 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Peppermint tea</span><span class="isep"> · </span><span class="iqty">4 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Dandelion Root tea</span><span class="isep"> · </span><span class="iqty">3 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Ginger tea</span><span class="isep"> · </span><span class="iqty">3 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Chamomile tea</span><span class="isep"> · </span><span class="iqty">4 servings</span></div></div>
+  </div>
+  <div class="footer">
+    <span>Reset From Within · 28-Day Plant-Based Program</span>
+    <span style="font-weight:600;">4 of 5</span>
+  </div>
+</div>
+<div class="page pg5">
+  <div class="hdr">
+    <div class="ghost"></div>
+    <div class="hdr-phase">MASTER LIST</div>
+    <div class="hdr-week">FULL PROGRAM</div>
+    <div class="hdr-sub">Shopping List</div>
+    <div class="hdr-days">Days 1–28</div>
+  </div>
+  <div class="disc"><span>The quantities below reflect estimated requirements for one person following the program. Actual amounts may vary depending on individual portion sizes and personal nutritional needs.</span></div>
+  <div class="cols">
+    <div class="col"><div class="sec-head">GRAINS</div><div class="item"><div class="cb"></div><span class="iname">Buckwheat</span><span class="isep"> · </span><span class="iqty">480 g</span></div><div class="item"><div class="cb"></div><span class="iname">Quinoa</span><span class="isep"> · </span><span class="iqty">790 g</span></div><div class="sec-head">LEGUMES</div><div class="item"><div class="cb"></div><span class="iname">Red lentils</span><span class="isep"> · </span><span class="iqty">430 g</span></div><div class="item"><div class="cb"></div><span class="iname">Chickpeas</span><span class="isep"> · </span><span class="iqty">780 g</span></div><div class="item"><div class="cb"></div><span class="iname">Green peas</span><span class="isep"> · </span><span class="iqty">2 cups</span></div><div class="sec-head">NUTS — PHASE 4 ONLY</div><div class="item"><div class="cb"></div><span class="iname">Walnuts</span><span class="isep"> · </span><span class="iqty">11 tbsp · 77 g</span></div><div class="item"><div class="cb"></div><span class="iname">Almonds</span><span class="isep"> · </span><span class="iqty">7 tbsp · 63 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cashews</span><span class="isep"> · </span><span class="iqty">5 tbsp · 45 g</span></div><div class="sec-head">VEGETABLES</div><div class="item"><div class="cb"></div><span class="iname">Broccoli</span><span class="isep"> · </span><span class="iqty">1 600 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cauliflower</span><span class="isep"> · </span><span class="iqty">900 g</span></div><div class="item"><div class="cb"></div><span class="iname">Green beans</span><span class="isep"> · </span><span class="iqty">550 g</span></div><div class="item"><div class="cb"></div><span class="iname">Asparagus</span><span class="isep"> · </span><span class="iqty">400 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sweet potato</span><span class="isep"> · </span><span class="iqty">750 g</span></div><div class="item"><div class="cb"></div><span class="iname">Butternut squash</span><span class="isep"> · </span><span class="iqty">750 g</span></div><div class="item"><div class="cb"></div><span class="iname">Pumpkin</span><span class="isep"> · </span><span class="iqty">250 g</span></div><div class="item"><div class="cb"></div><span class="iname">Zucchini</span><span class="isep"> · </span><span class="iqty">8</span></div><div class="item"><div class="cb"></div><span class="iname">Carrots</span><span class="isep"> · </span><span class="iqty">11</span></div><div class="item"><div class="cb"></div><span class="iname">Beetroot</span><span class="isep"> · </span><span class="iqty">3</span></div><div class="item"><div class="cb"></div><span class="iname">Cucumber</span><span class="isep"> · </span><span class="iqty">11</span></div><div class="item"><div class="cb"></div><span class="iname">Celery stalks</span><span class="isep"> · </span><span class="iqty">18</span></div><div class="item"><div class="cb"></div><span class="iname">Red bell peppers</span><span class="isep"> · </span><span class="iqty">11</span></div><div class="item"><div class="cb"></div><span class="iname">Yellow bell pepper</span><span class="isep"> · </span><span class="iqty">1</span></div><div class="item"><div class="cb"></div><span class="iname">Red onions</span><span class="isep"> · </span><span class="iqty">9.5</span></div><div class="item"><div class="cb"></div><span class="iname">Onions</span><span class="isep"> · </span><span class="iqty">28</span></div><div class="item"><div class="cb"></div><span class="iname">Leeks</span><span class="isep"> · </span><span class="iqty">9.5</span></div><div class="item"><div class="cb"></div><span class="iname">Garlic cloves</span><span class="isep"> · </span><span class="iqty">130</span></div><div class="item"><div class="cb"></div><span class="iname">Cherry tomatoes</span><span class="isep"> · </span><span class="iqty">350 g + 8 pcs</span></div><div class="item"><div class="cb"></div><span class="iname">Artichoke hearts</span><span class="isep"> · </span><span class="iqty">20</span></div><div class="item"><div class="cb"></div><span class="iname">Spring onions</span><span class="isep"> · </span><span class="iqty">10</span></div><div class="item"><div class="cb"></div><span class="iname">Pak choi</span><span class="isep"> · </span><span class="iqty">5 heads</span></div><div class="item"><div class="cb"></div><span class="iname">Daikon radish</span><span class="isep"> · </span><span class="iqty">200 g + few slices</span></div><div class="item"><div class="cb"></div><span class="iname">Purple cabbage</span><span class="isep"> · </span><span class="iqty">4 cups</span></div></div>
+    <div class="col"><div class="sec-head">LEAFY GREENS</div><div class="item"><div class="cb"></div><span class="iname">Baby spinach</span><span class="isep"> · </span><span class="iqty">78 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Baby arugula</span><span class="isep"> · </span><span class="iqty">20 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Arugula</span><span class="isep"> · </span><span class="iqty">8 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Swiss chard</span><span class="isep"> · </span><span class="iqty">2 large + 2 handfuls</span></div><div class="sec-head">SPROUTS</div><div class="item"><div class="cb"></div><span class="iname">Broccoli sprouts</span><span class="isep"> · </span><span class="iqty">10 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Sunflower sprouts</span><span class="isep"> · </span><span class="iqty">7 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Pea sprouts</span><span class="isep"> · </span><span class="iqty">4 handfuls</span></div><div class="sec-head">FRUITS & CITRUS</div><div class="item"><div class="cb"></div><span class="iname">Lemons</span><span class="isep"> · </span><span class="iqty">36</span></div><div class="item"><div class="cb"></div><span class="iname">Limes</span><span class="isep"> · </span><span class="iqty">12</span></div><div class="item"><div class="cb"></div><span class="iname">Avocados</span><span class="isep"> · </span><span class="iqty">12</span></div><div class="item"><div class="cb"></div><span class="iname">Green apple</span><span class="isep"> · </span><span class="iqty">0.5</span></div><div class="item"><div class="cb"></div><span class="iname">Grapefruit</span><span class="isep"> · </span><span class="iqty">0.5</span></div><div class="sec-head">BERRIES</div><div class="item"><div class="cb"></div><span class="iname">Blueberries</span><span class="isep"> · </span><span class="iqty">13½ cups · 2.0 kg</span></div><div class="item"><div class="cb"></div><span class="iname">Raspberries</span><span class="isep"> · </span><span class="iqty">4 cups · 480 g</span></div><div class="item"><div class="cb"></div><span class="iname">Blackberries</span><span class="isep"> · </span><span class="iqty">3½ cups · 510 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cranberries</span><span class="isep"> · </span><span class="iqty">2 cups · 200 g dried</span></div><div class="item"><div class="cb"></div><span class="iname">Pomegranate seeds</span><span class="isep"> · </span><span class="iqty">28 tbsp · 420 g</span></div><div class="sec-head">SEEDS</div><div class="item"><div class="cb"></div><span class="iname">Hemp seeds</span><span class="isep"> · </span><span class="iqty">92 tbsp · 920 g</span></div><div class="item"><div class="cb"></div><span class="iname">Pumpkin seeds</span><span class="isep"> · </span><span class="iqty">24 tbsp · 250 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sunflower seeds</span><span class="isep"> · </span><span class="iqty">14 tbsp · 150 g</span></div><div class="item"><div class="cb"></div><span class="iname">Ground flaxseeds</span><span class="isep"> · </span><span class="iqty">30 tbsp · 210 g</span></div><div class="item"><div class="cb"></div><span class="iname">Chia seeds</span><span class="isep"> · </span><span class="iqty">10 tbsp + 1 tsp · 130 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sesame seeds</span><span class="isep"> · </span><span class="iqty">14 tsp · 40 g</span></div><div class="sec-head">FERMENTED FOODS</div><div class="item"><div class="cb"></div><span class="iname">Kimchi</span><span class="isep"> · </span><span class="iqty">44 tbsp · 660 g</span></div><div class="item"><div class="cb"></div><span class="iname">Sauerkraut</span><span class="isep"> · </span><span class="iqty">46 tbsp · 690 g</span></div><div class="item"><div class="cb"></div><span class="iname">Miso paste</span><span class="isep"> · </span><span class="iqty">2.5 tbsp · 45 g</span></div><div class="item"><div class="cb"></div><span class="iname">Tamari</span><span class="isep"> · </span><span class="iqty">1 tbsp + 4 tsp · 35 ml</span></div></div>
+    <div class="col"><div class="sec-head">COCONUT</div><div class="item"><div class="cb"></div><span class="iname">Coconut milk</span><span class="isep"> · </span><span class="iqty">2 880 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut cream</span><span class="isep"> · </span><span class="iqty">2 110 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut water</span><span class="isep"> · </span><span class="iqty">2 850 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut flakes</span><span class="isep"> · </span><span class="iqty">5 tsp · 10 g</span></div><div class="sec-head">LIQUIDS & OILS</div><div class="item"><div class="cb"></div><span class="iname">Vegetable broth</span><span class="isep"> · </span><span class="iqty">11.4 L total</span></div><div class="item"><div class="cb"></div><span class="iname">Water (recipes)</span><span class="isep"> · </span><span class="iqty">2.55L</span></div><div class="item"><div class="cb"></div><span class="iname">Olive oil</span><span class="isep"> · </span><span class="iqty">6 tsp · 30 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Coconut oil</span><span class="isep"> · </span><span class="iqty">2 tsp · 10 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Sesame oil</span><span class="isep"> · </span><span class="iqty">2.5 tsp · 12.5 ml</span></div><div class="sec-head">FRESH HERBS</div><div class="item"><div class="cb"></div><span class="iname">Fresh cilantro</span><span class="isep"> · </span><span class="iqty">36 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh parsley</span><span class="isep"> · </span><span class="iqty">17 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh mint</span><span class="isep"> · </span><span class="iqty">6 handfuls + extra</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh basil</span><span class="isep"> · </span><span class="iqty">2 handfuls</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh dill</span><span class="isep"> · </span><span class="iqty">1 handful</span></div><div class="sec-head">GINGER & SPICES</div><div class="item"><div class="cb"></div><span class="iname">Morning ginger</span><span class="isep"> · </span><span class="iqty">28 tsp</span></div><div class="item"><div class="cb"></div><span class="iname">Fresh ginger</span><span class="isep"> · </span><span class="iqty">27 cm + grated</span></div><div class="item"><div class="cb"></div><span class="iname">Turmeric</span><span class="isep"> · </span><span class="iqty">~29 tsp · 75 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cinnamon</span><span class="isep"> · </span><span class="iqty">~14 tsp · 35 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cardamom</span><span class="isep"> · </span><span class="iqty">~4.75 tsp · 10 g</span></div><div class="item"><div class="cb"></div><span class="iname">Cumin</span><span class="isep"> · </span><span class="iqty">8.5 tsp · 20 g</span></div><div class="item"><div class="cb"></div><span class="iname">Vanilla</span><span class="isep"> · </span><span class="iqty">1 pinch</span></div><div class="item"><div class="cb"></div><span class="iname">Himalayan salt</span><span class="isep"> · </span><span class="iqty">to taste</span></div><div class="sec-head">OTHER</div><div class="item"><div class="cb"></div><span class="iname">Apple cider vinegar</span><span class="isep"> · </span><span class="iqty">24 tsp · 120 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Tahini</span><span class="isep"> · </span><span class="iqty">14.5 tbsp · 217.5 ml</span></div><div class="item"><div class="cb"></div><span class="iname">Wheatgrass</span><span class="isep"> · </span><span class="iqty">3 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Spirulina</span><span class="isep"> · </span><span class="iqty">1.5 tsp · 4.5 g</span></div><div class="sec-head">TEAS</div><div class="item"><div class="cb"></div><span class="iname">Peppermint tea</span><span class="isep"> · </span><span class="iqty">15 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Dandelion Root tea</span><span class="isep"> · </span><span class="iqty">12 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Ginger tea</span><span class="isep"> · </span><span class="iqty">12 servings</span></div><div class="item"><div class="cb"></div><span class="iname">Chamomile tea</span><span class="isep"> · </span><span class="iqty">14 servings</span></div></div>
+  </div>
+  <div class="footer">
+    <span>Reset From Within · 28-Day Plant-Based Program</span>
+    <span style="font-weight:600;">5 of 5</span>
+  </div>
+</div>
+<script>
+(function() {
+  const STORAGE_KEY = 'rfwShoppingChecked';
+
+  function loadChecked() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+  }
+  function saveChecked(state) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  }
+
+  function getItemId(cb) {
+    // Build a unique ID from page index + item index
+    const page = cb.closest('.page');
+    const pages = Array.from(document.querySelectorAll('.page'));
+    const pageIdx = pages.indexOf(page);
+    const items = Array.from(page.querySelectorAll('.cb'));
+    const itemIdx = items.indexOf(cb);
+    return pageIdx + '_' + itemIdx;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const state = loadChecked();
+    const allCbs = document.querySelectorAll('.cb');
+
+    allCbs.forEach(function(cb) {
+      const id = getItemId(cb);
+      const item = cb.closest('.item');
+
+      // Restore saved state
+      if (state[id]) {
+        cb.classList.add('checked');
+        if (item) item.classList.add('checked');
+      }
+
+      cb.addEventListener('click', function() {
+        const currentState = loadChecked();
+        if (cb.classList.contains('checked')) {
+          cb.classList.remove('checked');
+          if (item) item.classList.remove('checked');
+          delete currentState[id];
+        } else {
+          cb.classList.add('checked');
+          if (item) item.classList.add('checked');
+          currentState[id] = true;
+        }
+        saveChecked(currentState);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
